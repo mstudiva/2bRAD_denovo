@@ -180,6 +180,13 @@ ls *bam | wc -l
 zipper.py -a -9 -f sam --launcher -e studivanms@gmail.com
 sbatch zip.slurm
 
+zipper.py -a -9 -f trim --launcher -e studivanms@gmail.com
+sbatch zip.slurm
+
+mkdir ../mappedReads
+mv *.sam.gz ../mappedReads
+mv *.al ../mappedReads
+
 
 #------------------------------
 ## Genotyping
