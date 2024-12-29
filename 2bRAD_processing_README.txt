@@ -97,6 +97,11 @@ cd ../trimmedReads
 # Renames files based on two column lookup table (sampleID.csv): filename, then sample ID
 srun sampleRename.py -i sampleID -f tr0
 
+# If any files are not renamed, their barcodes have been mis-sequenced
+# move them to a different directory (the hyphen is only found in pre-renamed files)
+mkdir unused
+mv *-* unused/
+
 # For loop to generate a list of commands for each file
 echo '#!/bin/bash' > trimse.sh
 echo 'module load miniconda3-4.6.14-gcc-8.3.0-eenl5dj' >> trimse.sh
@@ -105,10 +110,17 @@ for file in *.tr0; do
 echo "cutadapt -q 15,15 -m 36 -o ${file/.tr0/}.trim $file > ${file/.tr0/}.trimlog.txt" >> trimse.sh;
 done
 
-# Non-parallel job submission
+# Since this job cannot be run in parallel, split job script up and run each separately
+# Creating one script per species
+for i in {1..6}; do cp trimse.sh "trimse$i.sh"; done
+conda activate cutadaptenv
 sbatch -o trimse.o%j -e trimse.e%j --mem=200GB --mail-type=ALL --mail-user=studivanms@gmail.com trimse.sh
 sbatch -o trimse2.o%j -e trimse2.e%j --mem=200GB --mail-type=ALL --mail-user=studivanms@gmail.com trimse2.sh
-
+sbatch -o trimse3.o%j -e trimse3.e%j --mem=200GB --mail-type=ALL --mail-user=studivanms@gmail.com trimse3.sh
+sbatch -o trimse4.o%j -e trimse4.e%j --mem=200GB --mail-type=ALL --mail-user=studivanms@gmail.com trimse4.sh
+sbatch -o trimse5.o%j -e trimse5.e%j --mem=200GB --mail-type=ALL --mail-user=studivanms@gmail.com trimse5.sh
+sbatch -o trimse6.o%j -e trimse6.e%j --mem=200GB --mail-type=ALL --mail-user=studivanms@gmail.com trimse6.sh
+sbatch -o trimse7.o%j -e trimse7.e%j --mem=200GB --mail-type=ALL --mail-user=studivanms@gmail.com trimse7.sh
 conda deactivate
 
 # Do we have the correct number of files?
@@ -119,7 +131,6 @@ echo '#!/bin/bash' >cleanReads
 echo readCounts.sh -e trim -o Filt >>cleanReads
 sbatch --mem=200GB --mail-type=ALL --mail-user=studivanms@gmail.com cleanReads
 # scp FiltReadCounts to local machine
-
 
 mkdir ../filteredReads
 mv *.trim ../filteredReads
