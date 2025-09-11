@@ -185,24 +185,21 @@ cd ~/db/
 module load bowtie2-2.3.5.1-gcc-8.3.0-63cvhw5
 module load samtools-1.10-gcc-8.3.0-khgksad
 
+mkdir ~/db/symGenomes
+
 # Concatenated symbiont genomes
 # Using concatenated Symbiodiniaceae references from NCBI's most recent genomes:
 # Symbiodinium (NCBI GCA_965279495.1), Breviolum (GCA_965643015.1), Cladocopium (GCA_947184155.2), Durusdinium (GCA_963970005.1)
 
 python concatFasta.py -o symbConcatGenome.fasta -s symbConcatGenome_summary.tsv -m symbConcatGenome_contig_to_fakechr.tsv GCA_965279495.1_pySymTrid1.1_genomic.fna GCA_965643015.1_pyBreMinu3.1_genomic.fna GCA_947184155.2_Cgoreaui_SCF055-01_v2.1_genomic.fna GCA_963970005.1_Durusdinium_trenchii_CCMP2556_genomic.fna
 
-
-
-mkdir ~/db/symGenomes
-
-scp symbConcatGenome.fasta mstudiva@koko-login.hpc.fau.edu:~/db/symGenome/
-
+# Now building bowtie2 index for concatenated symbiont genomes
 echo '#!/bin/bash' >genomeBuild.sh
 echo bowtie2-build symbConcatGenome.fasta symbConcatGenome >>genomeBuild.sh
 echo samtools faidx symbConcatGenome.fasta >>genomeBuild.sh
 sbatch -o genomeBuild.o%j -e genomeBuild.e%j --mail-type=ALL --mail-user=studivanms@gmail.com genomeBuild.sh
 
-# Coral host genome (if available)
+# Building bowtie2 index for coral genome
 echo '#!/bin/bash' >genomeBuild.sh
 echo bowtie2-build Orbicella_faveolata_gen_17.scaffolds.fa OfaveolataGenome >>genomeBuild.sh
 echo samtools faidx Orbicella_faveolata_gen_17.scaffolds.fa >>genomeBuild.sh
@@ -217,14 +214,15 @@ module load bowtie2-2.3.5.1-gcc-8.3.0-63cvhw5
 SYMGENOME=~/db/symGenomes/symbConcatGenome
 
 # aligning reads to concatenated symbiont reference
-2bRAD_bowtie2_launcher.py -g $SYMGENOME -f .trim -n zooxMaps --split -u un -a zoox --launcher -e studivanms@gmail.com
+2bRAD_bowtie2_launcher.py -g $SYMGENOME -f trim -n zooxMaps --split -u un -a zoox --launcher -e studivanms@gmail.com
 sbatch zooxMaps.slurm
 
 # some housekeeping
-mkdir ../../mappedReads/ofav/symbionts
-mv *.sam ../../mappedReads/ofav/symbionts
-mv *.zoox ../../mappedReads/ofav/symbionts
-cd ../../mappedReads/ofav/symbionts
+mkdir ../mappedReads
+mkdir ../mappedReads/symbionts
+mv *.sam ../mappedReads/symbionts
+mv *.zoox ../mappedReads/symbionts
+cd ../mappedReads/symbionts
 
 # Counting the mapped zoox reads
 # calculate mapping efficiency from these values compared to trimmed reads in Excel
@@ -235,7 +233,7 @@ sbatch --mem=200GB --mail-type=ALL --mail-user=studivanms@gmail.com mappedZooxRe
 
 module load samtools-1.10-gcc-8.3.0-khgksad
 
-# making script to generate indexed sam files
+# making script to generate indexed bam files
 >s2b
 for file in *.sam; do
 echo "samtools sort -O bam -o ${file/.sam/}.bam $file && samtools index ${file/.sam/}.bam">>s2b;
@@ -250,6 +248,13 @@ echo $i >>ZooxReads;
 samtools idxstats $i | cut -f 1,3 >>ZooxReads;
 done
 
+# some more housekeeping
+zipper.py -a -9 -f sam --launcher -e studivanms@gmail.com
+sbatch zip.slurm
+
+zipper.py -a -9 -f zoox --launcher -e studivanms@gmail.com
+sbatch zip.slurm
+
 
 #------------------------------
 ## Host alignment (2bRAD)
@@ -259,10 +264,12 @@ cd ~/project/directory/2bRAD/filteredReads
 zipper.py -a -9 -f gz --gunzip --launcher -e studivanms@gmail.com
 sbatch zip.slurm
 
-HOSTGENOME=~/db/ofavgenome/OfaveolataGenome
+HOSTGENOME=~/db/ofavGenome/OfaveolataGenome
+
+mkdir junk
 
 # mapping with --local option, enables clipping of mismatching ends (guards against deletions near ends of RAD tags)
-2bRAD_bowtie2_launcher.py -g $HOSTGENOME -f un --launcher -e studivanms@gmail.com
+2bRAD_bowtie2_launcher.py -g $HOSTGENOME -f un --split -u junk -a host --undir junk --launcher -e studivanms@gmail.com
 sbatch --mem=200GB maps.slurm
 
 ls *.sam | wc -l
@@ -282,16 +289,24 @@ sbatch --mem=200GB s2b.slurm
 
 ls *bam | wc -l
 
+# some housekeeping
 zipper.py -a -9 -f sam --launcher -e studivanms@gmail.com
 sbatch zip.slurm
 
 zipper.py -a -9 -f trim --launcher -e studivanms@gmail.com
 sbatch zip.slurm
 
-mkdir ../mappedReads
+zipper.py -a -9 -f host --launcher -e studivanms@gmail.com
+sbatch zip.slurm
+
+mv *.trim.gz ../../trimmedReads
 mv *.sam.gz ../mappedReads
-mv *.al ../mappedReads
+mv *.host ../mappedReads
+
+cd junk
+zipper.py -a -9 -f junk --launcher -e studivanms@gmail.com
+sbatch zip.slurm
 
 
 #------------------------------
-# Now proceed with ANGSD_processing_README
+# Now proceed with README_ANGSD_processing
