@@ -293,6 +293,9 @@ ls *bam | wc -l
 zipper.py -a -9 -f sam --launcher -e studivanms@gmail.com
 sbatch zip.slurm
 
+zipper.py -a -9 -f un --launcher -e studivanms@gmail.com
+sbatch zip.slurm
+
 zipper.py -a -9 -f trim --launcher -e studivanms@gmail.com
 sbatch zip.slurm
 
@@ -301,7 +304,9 @@ sbatch zip.slurm
 
 mv *.trim.gz ../../trimmedReads
 mv *.sam.gz ../mappedReads
-mv *.host ../mappedReads
+mv *.host.gz ../mappedReads
+mv *.bam ../mappedReads
+mv *.bai ../mappedReads
 
 cd junk
 zipper.py -a -9 -f junk --launcher -e studivanms@gmail.com
