@@ -55,13 +55,12 @@ conda create -n pgdspider bioconda::pgdspider
 ## Downloading scripts
 
 cd ~/bin
-svn checkout https://github.com/RyanEckert/Stephanocoenia_FKNMS_PopGen/trunk/scripts/
-mv scripts/* .
-rm -rf scripts
+git clone https://github.com/RyanEckert/Stephanocoenia_FKNMS_PopGen
+mv Stephanocoenia_FKNMS_PopGen/scripts/* .
 
 git clone https://github.com/mstudiva/2bRAD_denovo
 
-svn checkout https://github.com/xiaoming-liu/stairway-plot-v2.git
+git clone https://github.com/xiaoming-liu/stairway-plot-v2.git
 mv stairway-plot-v2.git/trunk/stairway_plot_v2.1.2.zip .
 unzip stairway_plot_v2.1.2.zip
 rm -r stairway_plot_v2.1.2.zip stairway-plot-v2.git
