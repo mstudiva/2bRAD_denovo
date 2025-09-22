@@ -126,3 +126,38 @@ ngsAdmixLauncher.py -f ofavNoClones.beagle.gz --maxK 16 -r 50 -n ofav --launcher
 sbatch --mem=200GB ofavNgsAdmix.slurm
 
 # Now determining the most likely value of K using Clumpak with the Evanno method
+>ofavNgsAdmixLogfile
+for log in ofav*.log; do
+grep -Po 'like=\K[^ ]+' $log >> ofavNgsAdmixLogfile;
+done
+
+# Start R in terminal
+R
+
+logs <- as.data.frame(read.table("ofavNgsAdmixLogfile"))
+
+# output is organized with 10, 11 preceding 1, 2, 3 etc.
+logs$K <- c(rep("10", 50), rep("11", 50), rep("12", 50), rep("13", 50), rep("14", 50), rep("15", 50), rep("16", 50), rep("1", 50), rep("2", 50), rep("3", 50), rep("4", 50), rep("5", 50), rep("6", 50), rep("7", 50), rep("8", 50), rep("9", 50))
+write.table(logs[, c(2, 1)], "ofavNgsAdmixLogfile_formatted", row.names = F, col.names = F, quote = F)
+quit()
+# No need to save workspace image [press 'n']
+n
+
+# Check that the formatted log file has the correct number of entries
+cat ofavNgsAdmixLogfile_formatted | wc -l
+# 800, so yes (K=16 * 50 simulations each)
+
+# Make copies of .qopt files to run structure selector on (.Q files)
+for file in ofav*.qopt; do
+filename=$(basename -- "$file" .qopt);
+cp "$file" "$filename".Q;
+done
+
+mkdir ofavQ
+mv ofav*Q ofavQ
+
+zip -r ofavQ.zip ofavQ
+
+# scp .zip and formatted logfile to local machine and upload to CLUMPAK (http://clumpak.tau.ac.il/bestK.html) and structure selector (https://lmme.ac.cn/StructureSelector/index.html)
+
+# scp ofavNoClones* to local machine for further analyses with R
