@@ -8,11 +8,11 @@ https://ryaneckert.github.io/Stephanocoenia_FKNMS_PopGen/code/
 ## Downloading scripts (if needed)
 
 cd ~/bin/
-git clone --recursive https://github.com/samtools/htslib.git
-git clone https://github.com/ANGSD/angsd.git
-cd htslib;make;cd ../angsd ;make HTSSRC=../htslib
-make HTSSRC="systemwide"
-
+wget https://github.com/ANGSD/angsd/releases/download/0.940/angsd0.940.tar.gz;
+tar xf angsd0.940.tar.gz;
+cd htslib; make;
+cd ..; cd angsd;
+make HTSSRC=../htslib;
 
 #------------------------------
 ## Fuzzy Genotyping (ANGSD)
@@ -158,6 +158,9 @@ mv ofav*Q ofavQ
 
 zip -r ofavQ.zip ofavQ
 
-# scp .zip and formatted logfile to local machine and upload to CLUMPAK (http://clumpak.tau.ac.il/bestK.html) and structure selector (https://lmme.ac.cn/StructureSelector/index.html)
+# scp .zip and formatted logfile to local machine
+# Upload logfile to CLUMPAK as a Log Probability table file (http://clumpak.tau.ac.il/bestK.html)
+# And .zip to structure selector as an ADMIXTURE file (https://lmme.ac.cn/StructureSelector/index.html)
+# You also need to create a PopMap file from bamsNoClones: a two-column, tab-delimited text file with sampleID and populationID
 
 # scp ofavNoClones* to local machine for further analyses with R
